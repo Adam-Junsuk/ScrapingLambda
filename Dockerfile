@@ -12,6 +12,11 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true \
 RUN npm ci
 
 COPY src/ src/
+COPY prisma/ prisma
+# Prisma Client 생성
+RUN npx prisma generate
+
+
 
 RUN npm run build
 
@@ -32,8 +37,9 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true \
 
 RUN npm ci --omit=dev
 
+
 COPY --from=development /app/dist/ ./dist/
 
 EXPOSE 3000
 
-CMD [ "/app/dist/lambda.handler" ]
+CMD [ "/app/dist/lambda.handler" ]TT

@@ -9,7 +9,7 @@ export class AppController {
 
   @Get('startScrapping')
   async startScrapping() {
-    console.log('GET 요청이 /startScrapping로 들어왔습니다.');
+    this.logger.log('Received GET request on /startScrapping');
 
     // 스크래핑 로직을 실행합니다.
     const result = await this.scrappingService.startScrapping();

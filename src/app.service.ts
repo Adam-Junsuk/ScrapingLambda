@@ -3,7 +3,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
-import { PrismaService } from './prisma/prisma.service';
+import { PrismaService } from './database/prisma.service';
 import { Prisma } from '@prisma/client';
 import { ScrappingRepository } from './scrapping.repository';
 
