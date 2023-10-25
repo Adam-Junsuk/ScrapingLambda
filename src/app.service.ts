@@ -1,9 +1,9 @@
-// src/scrapping/scrapping.service.ts
+// src/app.service.ts
 //1. 필요한 모듈과 서비스를 임포트 합니다.
 import { Injectable, Logger } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
-import { PrismaService } from './database/prisma.service';
+import { PrismaService } from './prisma.service';
 import { Prisma } from '@prisma/client';
 import { ScrappingRepository } from './scrapping.repository';
 
@@ -270,16 +270,40 @@ export class AppService {
   }
   private async scrapePage(url: string, category: string) {
     try {
-      this.logger.log(`스크래핑 시작: ${url}`);
+      this.logger.log(
+        `스크래핑을 시작합니다. 대상 URL: ${url}, 카테고리: ${category}`,
+      );
+
+      // 환경 변수에서 크로미움 경로를 가져옵니다.
+      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || null;
+      if (executablePath) {
+        this.logger.log(
+          `환경 변수에서 크로미움 경로를 가져왔습니다: ${executablePath}`,
+        );
+      } else {
+        this.logger.warn(
+          `환경 변수에서 크로미움 경로를 찾을 수 없습니다. 기본 경로를 사용합니다.`,
+        );
+      }
+
+      this.logger.log(`Puppeteer 브라우저를 실행합니다.`);
       const browser = await puppeteer.launch({
-        headless: true, // 배포 환경에서는 보통 headless 모드를 사용합니다.
+        headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath,
       });
+      this.logger.log(`Puppeteer 브라우저 실행 완료.`);
+
+      this.logger.log(`새로운 페이지를 엽니다.`);
       const page = await browser.newPage();
+      this.logger.log(`새 페이지 열기 완료.`);
+
+      this.logger.log(`대상 URL로 이동합니다.`);
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
         timeout: 150000,
       });
+      this.logger.log(`대상 URL로 이동 완료.`);
 
       let previousHeight: number = 0;
       let loopCount = 0; // 추가: 루프 횟수 제한
@@ -322,7 +346,8 @@ export class AppService {
       await browser.close(); // 이동: 브라우저 종료 코드를 while 루프 밖으로 이동
       this.logger.log('브라우저 종료');
     } catch (error) {
-      this.logger.error(`스크래핑 실패: ${error.message}`, error.stack);
+      this.logger.error(`스크래핑 실패: ${error.message}`);
+      this.logger.error(`스크래핑 실패: ${error.stack}`);
     }
   }
   private extractProductInfo(

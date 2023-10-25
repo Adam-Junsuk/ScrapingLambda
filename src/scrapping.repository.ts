@@ -1,7 +1,7 @@
 // src/scrapping/scrapping.repository.ts
 
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from './database/prisma.service';
+import { PrismaService } from './prisma.service';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
