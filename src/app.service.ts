@@ -46,19 +46,29 @@ export class AppService {
 
   // Carousel 방식의 페이지를 스크래핑하는 메소드입니다.
   async scrapePage2(url: string, category: string) {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--window-size=1920,1020',
-      ],
-      defaultViewport: {
-        width: 1920,
-        height: 1020,
-      },
-    });
-
+    const browser = await puppeteer
+      .launch({
+        headless: true,
+        dumpio: true,
+        executablePath: '/usr/bin/chromium-browser',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--single-process',
+          '--window-size=1920,1020',
+        ],
+        defaultViewport: {
+          width: 1920,
+          height: 1020,
+        },
+        ignoreDefaultArgs: ['--disable-extensions'],
+      })
+      .catch((err) => {
+        this.logger.error(`Puppeteer 브라우저 실행 실패: ${err.message}`);
+        throw err;
+      });
+    this.logger.log(`Puppeteer 브라우저 실행 완료.`);
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 279813 });
 
@@ -274,37 +284,47 @@ export class AppService {
         `스크래핑을 시작합니다. 대상 URL: ${url}, 카테고리: ${category}`,
       );
 
-      // 환경 변수에서 크로미움 경로를 가져옵니다.
-      const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || null;
-      if (executablePath) {
-        this.logger.log(
-          `환경 변수에서 크로미움 경로를 가져왔습니다: ${executablePath}`,
-        );
-      } else {
-        this.logger.warn(
-          `환경 변수에서 크로미움 경로를 찾을 수 없습니다. 기본 경로를 사용합니다.`,
-        );
-      }
-
+      // Puppeteer 브라우저를 실행합니다.
       this.logger.log(`Puppeteer 브라우저를 실행합니다.`);
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath,
-      });
+      const browser = await puppeteer
+        .launch({
+          headless: true,
+          dumpio: true,
+          executablePath: '/usr/bin/chromium-browser',
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--single-process',
+          ],
+          ignoreDefaultArgs: ['--disable-extensions'],
+        })
+        .catch((err) => {
+          this.logger.error(`Puppeteer 브라우저 실행 실패: ${err.message}`);
+          throw err;
+        });
       this.logger.log(`Puppeteer 브라우저 실행 완료.`);
 
+      // 새로운 페이지를 엽니다.
       this.logger.log(`새로운 페이지를 엽니다.`);
-      const page = await browser.newPage();
+      const page = await browser.newPage().catch((err) => {
+        this.logger.error(`새 페이지 열기 실패: ${err.message}`);
+        throw err;
+      });
       this.logger.log(`새 페이지 열기 완료.`);
 
+      // 대상 URL로 이동합니다.
       this.logger.log(`대상 URL로 이동합니다.`);
-      await page.goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout: 150000,
-      });
+      await page
+        .goto(url, {
+          waitUntil: 'domcontentloaded',
+          timeout: 150000,
+        })
+        .catch((err) => {
+          this.logger.error(`대상 URL로 이동 실패: ${err.message}`);
+          throw err;
+        });
       this.logger.log(`대상 URL로 이동 완료.`);
-
       let previousHeight: number = 0;
       let loopCount = 0; // 추가: 루프 횟수 제한
 

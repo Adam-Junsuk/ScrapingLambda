@@ -1,5 +1,6 @@
 //Users/adam/scraping-lambda/lambda.ts
 import { NestFactory } from '@nestjs/core';
+import { promises as fsPromises } from 'fs';
 import { Logger } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
@@ -91,6 +92,15 @@ export const handler: Handler = async (event: any, context: Context) => {
   logger.log('Lambda handler invoked.');
 
   try {
+    // 실행 권한 확인
+    const path = '/usr/bin/chromium-browser';
+    try {
+      await fsPromises.access(path, fsPromises.constants.X_OK);
+      logger.log(`Executable permission exists at ${path}`);
+    } catch (err) {
+      logger.error(`Executable permission does not exist at ${path}`);
+      throw new Error(`Executable permission does not exist at ${path}`);
+    }
     // 서버 부트스트래핑을 시작하고 로깅
     logger.log('Attempting to bootstrap server...');
     const app = await bootstrapServer();

@@ -10,10 +10,13 @@ export class AppController {
   @Get('startScrapping')
   async startScrapping() {
     this.logger.log('Received GET request on /startScrapping');
+    try {
+      // 스크래핑 로직을 실행합니다.
+      const result = await this.scrappingService.startScrapping();
 
-    // 스크래핑 로직을 실행합니다.
-    const result = await this.scrappingService.startScrapping();
-
-    return result;
+      return result;
+    } catch (err) {
+      this.logger.log('컨트롤러에서 실패 반환');
+    }
   }
 }
