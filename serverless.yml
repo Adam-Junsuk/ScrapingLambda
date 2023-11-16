@@ -25,7 +25,7 @@ provider:
 functions:
   app:
     memorySize: 1024
-    timeout: 600
+    timeout: 900
     image:
       uri: ${env:ECR_URI}
       command:
